@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>X GAME</title>
+  <style>
+    body {
+      background: linear-gradient(to top, #a1c4fd, #c2e9fb);
+      font-family: 'Arial', sans-serif;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      overflow: hidden;
+    }
+
+    h1 {
+      color: #fff;
+      margin-bottom: 10px;
+      text-shadow: 0 0 8px rgba(0,0,0,0.3);
+    }
+
+    /* Game container */
+    #game-container {
+      width: 90vw;
+      max-width: 600px;
+      height: 250px;
+      position: relative;
+      overflow: hidden;
+      border-radius: 10px;
+      background: linear-gradient(to top, #87ceeb 0%, #ffffff 100%);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.3);
+    }
+
+    /* Moving ground */
+    #ground {
+      position: absolute;
+      bottom: 0;
+      width: 200%;
+      height: 40px;
+      background: repeating-linear-gradient(
+        45deg,
+        #6c757d,
+        #6c757d 20px,
+        #495057 20px,
+        #495057 40px
+      );
+      animation: move-ground 2s linear infinite;
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      font-size: 14px;
+      color: rgba(255,255,255,0.15);
+      letter-spacing: 2px;
+    }
+
+    /* EDITX Watermarks on the ground */
+    #ground span {
+      transform: rotate(-20deg);
+    }
+
+    @keyframes move-ground {
+      from { transform: translateX(0); }
+      to { transform: translateX(-50%); }
+    }
+
+    /* Character */
+    #character {
+      width: 35px;
+      height: 35px;
+      background: linear-gradient(to top, #3f72af, #5bc0de);
+      position: absolute;
+      bottom: 40px;
+      left: 15%;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+
+    .jump-animation {
+      animation: jump 0.8s ease-out; /* longer jump */
+    }
+
+    @keyframes jump {
+      0% { bottom: 40px; }
+      50% { bottom: 190px; } /* higher jump */
+      100% { bottom: 40px; }
+    }
+
+    .lose-animation {
+      animation: shake 0.5s linear;
+    }
+
+    @keyframes shake {
+      0% { transform: translate(0, 0); }
+      25% { transform: translate(-5px, 5px); }
+      50% { transform: translate(5px, -5px); }
+      75% { transform: translate(-5px, 5px); }
+      100% { transform: translate(0, 0); }
+    }
+
+    /* Obstacles */
+    .obstacle {
+      width: 35px;
+      height: 35px;
+      background-color: #d92027;
+      position: absolute;
+      bottom: 40px;
+      border-radius: 5px;
+      animation: move-left var(--animation-speed) linear forwards;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+    }
+
+    .triangle {
+      clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+      background: linear-gradient(to top, #ff6b6b, #ff4757);
+    }
+
+    .circle {
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, #ff7f50, #e84118);
+    }
+
+    @keyframes move-left {
+      from { right: -40px; }
+      to { right: 100%; }
+    }
+
+    /* Score display */
+    #score-container {
+      display: flex;
+      justify-content: space-between;
+      width: 90vw;
+      max-width: 600px;
+      margin-bottom: 15px;
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #fff;
+      text-shadow: 0 0 5px rgba(0,0,0,0.3);
+    }
+
+    /* Buttons */
+    #start-button, .restart-button {
+      padding: 12px 24px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 20px;
+      border: none;
+      border-radius: 5px;
+      background-color: #007bff;
+      color: white;
+      transition: background-color 0.2s, transform 0.2s;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+
+    #start-button:hover, .restart-button:hover {
+      background-color: #0056b3;
+      transform: scale(1.05);
+    }
+
+    /* Game over overlay */
+    #game-over-message {
+      display: none;
+      color: #333;
+      font-size: 2rem;
+      text-align: center;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.8);
+      background: rgba(255, 255, 255, 0.95);
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+      transition: all 0.3s ease-in-out;
+    }
+
+    #game-over-message.show {
+      display: block;
+      transform: translate(-50%, -50%) scale(1);
+    }
+  </style>
+</head>
+<body>
+
+  <h1>X GAME</h1>
+
+  <div id="score-container">
+    <div>Score: <span id="score">0</span></div>
+    <div>High Score: <span id="high-score">0</span></div>
+  </div>
+
+  <div id="game-container">
+    <div id="ground">
+      <span>EDITX</span><span>EDITX</span><span>EDITX</span><span>EDITX</span>
+    </div>
+    <div id="character"></div>
+    <div id="game-over-message">Game Over!<br>Score: <span id="final-score">0</span><br><button class="restart-button" onclick="startGame()">Play Again</button></div>
+  </div>
+  
+  <button id="start-button" onclick="startGame()">Start Game</button>
+
+  <script>
+    const character = document.getElementById("character");
+    const gameContainer = document.getElementById("game-container");
+    const scoreDisplay = document.getElementById("score");
+    const highScoreDisplay = document.getElementById("high-score");
+    const startButton = document.getElementById("start-button");
+    const gameOverMessage = document.getElementById("game-over-message");
+    const finalScoreDisplay = document.getElementById("final-score");
+    const shapes = ['rectangle', 'triangle', 'circle'];
+
+    let score = 0;
+    let isGameOver = true;
+    let scoreInterval;
+    let obstacleGenerationInterval;
+    let collisionInterval;
+    
+    let obstacleSpeed = 2.5;
+    let obstacleIntervalTime = 1500;
+    
+    function getHighScore() {
+      return localStorage.getItem('highScore') || 0;
+    }
+
+    function setHighScore(newScore) {
+      localStorage.setItem('highScore', newScore);
+    }
+
+    highScoreDisplay.innerText = getHighScore();
+
+    function jump() {
+      if (!character.classList.contains("jump-animation") && !isGameOver) {
+        character.classList.add("jump-animation");
+        setTimeout(() => {
+          character.classList.remove("jump-animation");
+        }, 800); // matches jump duration
+      }
+    }
+
+    function createObstacle() {
+      if (isGameOver) return;
+      
+      const obstacle = document.createElement('div');
+      obstacle.classList.add('obstacle');
+      
+      const randomShape = shapes[Math.floor(Math.random() * shapes.length)];
+      if (randomShape !== 'rectangle') {
+        obstacle.classList.add(randomShape);
+      }
+
+      obstacle.style.bottom = `40px`; 
+      obstacle.style.setProperty('--animation-speed', obstacleSpeed + 's');
+      gameContainer.appendChild(obstacle);
+      
+      obstacle.addEventListener('animationend', () => {
+        obstacle.remove();
+      });
+    }
+
+    function checkCollision() {
+      const characterRect = character.getBoundingClientRect();
+      const obstacles = document.querySelectorAll('.obstacle');
+
+      obstacles.forEach(obstacle => {
+        const obstacleRect = obstacle.getBoundingClientRect();
+        
+        if (
+          characterRect.right > obstacleRect.left &&
+          characterRect.left < obstacleRect.right &&
+          characterRect.bottom > obstacleRect.top &&
+          characterRect.top < obstacleRect.bottom
+        ) {
+          endGame();
+        }
+      });
+    }
+
+    function startGame() {
+      isGameOver = false;
+      score = 0;
+      obstacleSpeed = 2.5;
+      obstacleIntervalTime = 1500;
+      scoreDisplay.innerText = score;
+      startButton.style.display = 'none';
+      gameOverMessage.classList.remove('show');
+      
+      document.querySelectorAll('.obstacle').forEach(obs => obs.remove());
+      
+      scoreInterval = setInterval(() => {
+        if (!isGameOver) {
+          score++;
+          scoreDisplay.innerText = score;
+          
+          if (score > 0 && score % 100 === 0) {
+            obstacleSpeed = Math.max(0.5, obstacleSpeed - 0.2);
+            obstacleIntervalTime = Math.max(500, obstacleIntervalTime - 100);
+            
+            clearInterval(obstacleGenerationInterval);
+            obstacleGenerationInterval = setInterval(createObstacle, obstacleIntervalTime);
+          }
+        }
+      }, 100);
+
+      obstacleGenerationInterval = setInterval(createObstacle, obstacleIntervalTime);
+      collisionInterval = setInterval(checkCollision, 10);
+      
+      document.addEventListener("keydown", jump);
+      gameContainer.addEventListener("click", jump);
+    }
+
+    function endGame() {
+      isGameOver = true;
+      clearInterval(scoreInterval);
+      clearInterval(obstacleGenerationInterval);
+      clearInterval(collisionInterval);
+      
+      character.classList.add('lose-animation');
+      
+      if (score > getHighScore()) {
+        setHighScore(score);
+        highScoreDisplay.innerText = score;
+      }
+      
+      finalScoreDisplay.innerText = score;
+      
+      setTimeout(() => {
+        gameOverMessage.classList.add('show');
+        character.classList.remove('lose-animation');
+      }, 500);
+      
+      document.removeEventListener("keydown", jump);
+      gameContainer.removeEventListener("click", jump);
+    }
+  </script>
+</body>
+</html>
